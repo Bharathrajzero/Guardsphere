@@ -1,0 +1,84 @@
+2026-05-27 16:28:34 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-27 16:28:34 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-27 16:30:05 [WARNING] guardsphere — BLOCKED [da982a1c-24b] ip=127.0.0.1 rule=Instruction override
+2026-05-27 16:30:24 [INFO] guardsphere — SANITIZED [23d8edf2-919] ip=127.0.0.1 masked=8
+2026-05-27 16:31:43 [INFO] guardsphere — PASSED [b35f4f36-957] ip=127.0.0.1 masked=0
+2026-05-27 16:38:44 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-27 16:38:49 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-27 16:38:49 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 10:56:52 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 10:56:52 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 11:33:15 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 11:33:27 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 11:33:27 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:11:15 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:11:15 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:12:03 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:12:03 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:17:32 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:21:32 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:21:32 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:28:28 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:28:28 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:28:28 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:29:10 [INFO] guardsphere — PASSED [09c7a50a-d75] ip=127.0.0.1 masked=0
+2026-05-28 12:33:04 [INFO] guardsphere — Settings updated: 8 keys
+2026-05-28 12:34:35 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:35:04 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:35:04 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:35:26 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:35:33 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:35:33 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:38:08 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:38:47 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:38:47 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:40:03 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:40:09 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:40:09 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:40:28 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:40:28 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:40:28 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:41:48 [INFO] guardsphere — PASSED [975b6ef7-dd7] ip=127.0.0.1 masked=0
+2026-05-28 12:45:06 [INFO] guardsphere — PASSED [6c0da2e7-cb0] ip=127.0.0.1 masked=0
+2026-05-28 12:46:09 [INFO] guardsphere — PASSED [b6780a91-5e3] ip=127.0.0.1 masked=0
+2026-05-28 12:46:50 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:47:13 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:47:13 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:47:45 [INFO] guardsphere — PASSED [74da6892-e6d] ip=127.0.0.1 masked=0
+2026-05-28 12:53:10 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:53:10 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:54:36 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:54:40 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:54:40 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:56:02 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:56:06 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:56:06 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:57:26 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 12:57:28 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 12:57:28 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 12:59:54 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 13:00:08 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 13:00:08 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 13:00:16 [WARNING] guardsphere — BLOCKED [23f2300e-e22] ip=127.0.0.1 rule=Instruction override
+2026-05-28 13:00:20 [WARNING] guardsphere — BLOCKED [22f1b0df-e07] ip=127.0.0.1 rule=Instruction override
+2026-05-28 13:00:36 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 13:00:40 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 13:00:40 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 13:00:50 [INFO] guardsphere — SANITIZED [29204aa1-919] ip=127.0.0.1 masked=4
+2026-05-28 13:03:35 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 13:03:40 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 13:03:40 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 13:04:20 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 13:04:23 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 13:04:23 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 13:06:02 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 13:06:02 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 13:08:32 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 13:09:36 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 13:09:36 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 13:09:56 [WARNING] guardsphere — BLOCKED [8ae37196-862] ip=127.0.0.1 rule=Instruction override
+2026-05-28 13:10:58 [INFO] guardsphere — GuardSphere AI Firewall shutting down
+2026-05-28 13:11:18 [INFO] guardsphere — Database initialised at guardsphere.db
+2026-05-28 13:11:18 [INFO] guardsphere — GuardSphere AI Firewall started — env=production port=8080
+2026-05-28 13:16:18 [INFO] guardsphere — PASSED [97c02375-4a8] ip=127.0.0.1 masked=0
+2026-05-28 13:16:56 [INFO] guardsphere — GuardSphere AI Firewall shutting down
