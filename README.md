@@ -554,4 +554,5 @@ MIT License - See LICENSE file for details
 
 **Built with ❤️ for AI Security**
 
-GuardSphere v3.0 - Production-Grade AI Firewall
+GuardSphere v3.0 - AI Firewall
+
