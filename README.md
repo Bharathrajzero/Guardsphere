@@ -555,11 +555,12 @@ MIT License - See LICENSE file for details
 Bharath Raj
 GitHub: https://github.com/Bharathrajzero
 
-
-
+---
 **Built with ❤️ for AI Security**
 GuardSphere v3.0 - AI Firewall
 
+---
 ## LICENCE
 This project is licensed under the MIT License © 2026 Bharath Raj, AlphaGroup Ltd.
 
+---
