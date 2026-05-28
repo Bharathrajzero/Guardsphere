@@ -560,7 +560,7 @@ GitHub: https://github.com/Bharathrajzero
 GuardSphere v3.0 - AI Firewall
 
 ---
-## Licence
+## 📝License
 This project is licensed under the MIT License © 2026 Bharath Raj, AlphaGroup Ltd.
 
 ---
