@@ -551,6 +551,11 @@ MIT License - See LICENSE file for details
 - [ ] Role-based access control (RBAC)
 
 ---
+## 👨‍💻 Author
+Bharath Raj
+GitHub: https://github.com/Bharathrajzero
+
+
 
 **Built with ❤️ for AI Security**
 
