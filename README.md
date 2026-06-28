@@ -7,7 +7,9 @@ GuardSphere is an enterprise-ready AI security middleware that protects LLM appl
 ---
 ## Screenshots
 <img width="1920" height="1079" alt="Capture" src="https://github.com/user-attachments/assets/ea950977-0ac4-42c5-9fe7-f60a0372bd1f" />
+
 <img width="1920" height="1079" alt="Capture1" src="https://github.com/user-attachments/assets/d7886746-85f2-437c-a3ae-97fabf8c9bc0" />
+
 <img width="1920" height="1080" alt="Screenshot 2026-06-28 223320" src="https://github.com/user-attachments/assets/ecc8d9cf-4322-483f-bc1e-c6df26b32192" />
 
 ---
