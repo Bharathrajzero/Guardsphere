@@ -51,12 +51,26 @@ logger = logging.getLogger("guardsphere")
 # DATABASE
 # ==========================================
 def get_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
+from contextlib import contextmanager
+
+@contextmanager
+def db_conn():
+    """Context manager that opens a DB connection and always closes it."""
+    conn = sqlite3.connect(DB_FILE, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
+
 def init_db():
-    with get_db() as conn:
+    conn = get_db()
+    try:
+      with conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS events (
                 id          TEXT PRIMARY KEY,
@@ -114,14 +128,19 @@ def init_db():
         for k, v in defaults:
             conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (k, v))
         conn.commit()
+    finally:
+        conn.close()
     logger.info("Database initialised at %s", DB_FILE)
 
 def increment_counter(conn, key: str):
     conn.execute("UPDATE counters SET value = value + 1 WHERE key = ?", (key,))
 
 def get_counters():
-    with get_db() as conn:
+    conn = get_db()
+    try:
         rows = conn.execute("SELECT key, value FROM counters").fetchall()
+    finally:
+        conn.close()
     result = {r["key"]: r["value"] for r in rows}
     # Ensure all keys exist with default 0
     for key in ["total_processed", "total_blocked", "total_sanitized", "total_passed"]:
@@ -130,34 +149,39 @@ def get_counters():
     return result
 
 def insert_event(event: dict):
-    with get_db() as conn:
-        conn.execute("""
-            INSERT INTO events
-                (id, timestamp, unix_ts, status, severity, latency_ms,
-                 tokens_masked, payload_bytes, matched_rule,
-                 full_payload, sanitized_payload, ip_address, snippet)
-            VALUES
-                (:id,:timestamp,:unix_ts,:status,:severity,:latency_ms,
-                 :tokens_masked,:payload_bytes,:matched_rule,
-                 :full_payload,:sanitized_payload,:ip_address,:snippet)
-        """, event)
-        increment_counter(conn, "total_processed")
-        if event["status"] == "BLOCKED":
-            increment_counter(conn, "total_blocked")
-        elif event["status"] == "SANITIZED":
-            increment_counter(conn, "total_sanitized")
-        elif event["status"] == "PASSED":
-            increment_counter(conn, "total_passed")
-        # Prune old rows beyond MAX_EVENTS
-        conn.execute("""
-            DELETE FROM events WHERE id NOT IN (
-                SELECT id FROM events ORDER BY unix_ts DESC LIMIT ?
-            )
-        """, (MAX_EVENTS,))
-        conn.commit()
+    conn = get_db()
+    try:
+        with conn:
+            conn.execute("""
+                INSERT INTO events
+                    (id, timestamp, unix_ts, status, severity, latency_ms,
+                     tokens_masked, payload_bytes, matched_rule,
+                     full_payload, sanitized_payload, ip_address, snippet)
+                VALUES
+                    (:id,:timestamp,:unix_ts,:status,:severity,:latency_ms,
+                     :tokens_masked,:payload_bytes,:matched_rule,
+                     :full_payload,:sanitized_payload,:ip_address,:snippet)
+            """, event)
+            increment_counter(conn, "total_processed")
+            if event["status"] == "BLOCKED":
+                increment_counter(conn, "total_blocked")
+            elif event["status"] == "SANITIZED":
+                increment_counter(conn, "total_sanitized")
+            elif event["status"] == "PASSED":
+                increment_counter(conn, "total_passed")
+            # Prune old rows beyond MAX_EVENTS
+            conn.execute("""
+                DELETE FROM events WHERE id NOT IN (
+                    SELECT id FROM events ORDER BY unix_ts DESC LIMIT ?
+                )
+            """, (MAX_EVENTS,))
+            conn.commit()
+    finally:
+        conn.close()
 
 def fetch_events(limit=50, status_filter=None, search=None):
-    with get_db() as conn:
+    conn = get_db()
+    try:
         query = "SELECT * FROM events"
         params = []
         conditions = []
@@ -172,11 +196,14 @@ def fetch_events(limit=50, status_filter=None, search=None):
         query += " ORDER BY unix_ts DESC LIMIT ?"
         params.append(limit)
         rows = conn.execute(query, params).fetchall()
+    finally:
+        conn.close()
     return [dict(r) for r in rows]
 
 def fetch_chart_data():
     """Hourly breakdown for last 24h."""
-    with get_db() as conn:
+    conn = get_db()
+    try:
         rows = conn.execute("""
             SELECT
                 strftime('%H:00', timestamp) as hour,
@@ -187,65 +214,19 @@ def fetch_chart_data():
             GROUP BY hour, status
             ORDER BY hour ASC
         """, (time.time() - 86400,)).fetchall()
+    finally:
+        conn.close()
     return [dict(r) for r in rows]
 
 def reset_db():
-    with get_db() as conn:
-        conn.execute("DELETE FROM events")
-        conn.execute("UPDATE counters SET value = 0")
-        conn.commit()
-
-# ==========================================
-# SECURITY ENGINE
-# ==========================================
-INJECTION_RULES = [
-    # (pattern_string, severity, label)
-    ("ignore previous instructions",   "CRITICAL", "Instruction override"),
-    ("system override",                 "CRITICAL", "System override"),
-    ("reveal your system prompt",       "CRITICAL", "System prompt extraction"),
-    ("translate the above",             "HIGH",     "Context leak"),
-    ("disregard all prior",             "CRITICAL", "Instruction wipe"),
-    ("forget your instructions",        "CRITICAL", "Instruction wipe"),
-    ("act as dan",                      "CRITICAL", "DAN jailbreak"),
-    ("jailbreak",                       "HIGH",     "Jailbreak keyword"),
-    ("bypass your filters",             "HIGH",     "Filter bypass"),
-    ("disable safety",                  "CRITICAL", "Safety disable"),
-    ("pretend you have no restrictions","HIGH",     "Restriction bypass"),
-    ("you are now",                     "MEDIUM",   "Role override"),
-    ("new persona",                     "MEDIUM",   "Persona injection"),
-    ("developer mode",                  "HIGH",     "Dev mode bypass"),
-    ("sudo mode",                       "HIGH",     "Privilege escalation"),
-    ("override all policies",           "CRITICAL", "Policy override"),
-]
-
-PII_PATTERNS = [
-    # (regex, label)
-    (r"sk-[a-zA-Z0-9]{20,}",                               "OpenAI API key"),
-    (r"AI_KEY_[a-zA-Z0-9]{8,}",                            "Internal API key"),
-    (r"ghp_[a-zA-Z0-9]{36,}",                              "GitHub token"),
-    (r"AKIA[0-9A-Z]{16}",                                   "AWS access key"),
-    (r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", "Email address"),
-    (r"\b(?:\d[ -]?){15,16}\b",                            "Credit card"),
-    (r"\b\d{3}-\d{2}-\d{4}\b",                             "SSN"),
-    (r"\b(\+\d{1,3}[\s-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b", "Phone number"),
-    (r"Bearer\s+[a-zA-Z0-9\-._~+/]+=*",                    "Bearer token"),
-    (r"password\s*[:=]\s*\S+",                              "Password literal"),
-]
-
-COMBINED_PII_RE = re.compile("|".join(f"({p[0]})" for p in PII_PATTERNS), re.IGNORECASE)
-
-def analyse_prompt(text: str):
-    """Returns (blocked, severity, matched_rule, sanitized_text, tokens_masked)."""
-    lower = text.lower()
-    for term, severity, label in INJECTION_RULES:
-        if term in lower:
-            return True, severity, label, text, 0
-
-    sanitized, count = COMBINED_PII_RE.subn("[REDACTED]", text)
-    if count > 0:
-        return False, "MEDIUM", "PII detected", sanitized, count
-
-    return False, "LOW", None, text, 0
+    conn = get_db()
+    try:
+        with conn:
+            conn.execute("DELETE FROM events")
+            conn.execute("UPDATE counters SET value = 0")
+            conn.commit()
+    finally:
+        conn.close()
 
 # ==========================================
 # LIFESPAN
@@ -1299,6 +1280,7 @@ function switchView(view) {
   document.querySelector(`[data-view="${view}"]`).classList.add('active');
   
   // Load data for specific views
+  if (view === 'overview') fetchMetrics();
   if (view === 'threat-intel') loadThreatIntel();
   if (view === 'analytics') loadAnalytics();
   if (view === 'audit') loadAuditLedger();
@@ -1700,13 +1682,13 @@ async function fetchMetrics() {
       fetch('/api/chart')
     ]);
     
-    if (!metaRes.ok || !evtRes.ok || !chartRes.ok) {
-      throw new Error(`API error: telemetry=${metaRes.status}, events=${evtRes.status}, chart=${chartRes.status}`);
+    if (!metaRes.ok) {
+      throw new Error(`Telemetry API error: ${metaRes.status}`);
     }
-    
+
     const meta  = await metaRes.json();
-    const evts  = await evtRes.json();
-    const chart = await chartRes.json();
+    const evts  = evtRes.ok  ? await evtRes.json()  : [];
+    const chart = chartRes.ok ? await chartRes.json() : [];
 
     console.log('✓ Metrics loaded:', meta);
     console.log('✓ Events loaded:', evts.length, 'events');
@@ -2179,8 +2161,7 @@ async def process_secure_completion(payload: PromptPayload, request: Request):
             "ip_address": ip,
             "snippet": payload.prompt[:80] + "..." if len(payload.prompt) > 80 else payload.prompt,
         }
-        asyncio.get_event_loop().run_in_executor(None, insert_event, event)
-        logger.warning("BLOCKED [%s] ip=%s rule=%s", event_id, ip, matched_rule)
+        asyncio.get_running_loop().run_in_executor(None, insert_event, event)
         raise HTTPException(
             status_code=400,
             detail=f"Security Governance Exception: Prompt injection detected — rule: \"{matched_rule}\""
@@ -2205,7 +2186,7 @@ async def process_secure_completion(payload: PromptPayload, request: Request):
         "ip_address": ip,
         "snippet": payload.prompt[:80] + "..." if len(payload.prompt) > 80 else payload.prompt,
     }
-    asyncio.get_event_loop().run_in_executor(None, insert_event, event)
+    asyncio.get_running_loop().run_in_executor(None, insert_event, event)
     logger.info("%s [%s] ip=%s masked=%d", status, event_id, ip, tokens_masked)
 
     msg = (
@@ -2284,7 +2265,7 @@ async def health():
 # ==========================================
 @app.get("/api/threat-intel")
 async def get_threat_intel():
-    with get_db() as conn:
+    with db_conn() as conn:
         # Top attack patterns
         patterns = conn.execute("""
             SELECT matched_rule, COUNT(*) as count, severity
@@ -2326,7 +2307,7 @@ async def get_threat_intel():
 # ==========================================
 @app.get("/api/analytics")
 async def get_analytics():
-    with get_db() as conn:
+    with db_conn() as conn:
         # Hourly stats for last 7 days
         hourly = conn.execute("""
             SELECT 
@@ -2388,7 +2369,7 @@ class PolicyRule(BaseModel):
 
 @app.get("/api/policy-rules")
 async def get_policy_rules():
-    with get_db() as conn:
+    with db_conn() as conn:
         rows = conn.execute("""
             SELECT id, name, pattern, severity, enabled, created_at
             FROM policy_rules ORDER BY created_at DESC
@@ -2399,7 +2380,7 @@ async def get_policy_rules():
 @app.post("/api/policy-rules")
 async def create_policy_rule(rule: PolicyRule):
     rule_id = str(uuid.uuid4())[:12]
-    with get_db() as conn:
+    with db_conn() as conn:
         conn.execute("""
             INSERT INTO policy_rules (id, name, pattern, severity, enabled, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -2412,7 +2393,7 @@ async def create_policy_rule(rule: PolicyRule):
 
 @app.put("/api/policy-rules/{rule_id}")
 async def update_policy_rule(rule_id: str, rule: PolicyRule):
-    with get_db() as conn:
+    with db_conn() as conn:
         conn.execute("""
             UPDATE policy_rules 
             SET name=?, pattern=?, severity=?, enabled=?
@@ -2425,7 +2406,7 @@ async def update_policy_rule(rule_id: str, rule: PolicyRule):
 
 @app.delete("/api/policy-rules/{rule_id}")
 async def delete_policy_rule(rule_id: str):
-    with get_db() as conn:
+    with db_conn() as conn:
         conn.execute("DELETE FROM policy_rules WHERE id=?", (rule_id,))
         conn.commit()
     logger.info("Policy rule deleted: %s", rule_id)
@@ -2441,14 +2422,14 @@ class SettingsUpdate(BaseModel):
 
 @app.get("/api/settings")
 async def get_settings():
-    with get_db() as conn:
+    with db_conn() as conn:
         rows = conn.execute("SELECT key, value FROM settings").fetchall()
     return {r["key"]: r["value"] for r in rows}
 
 
 @app.post("/api/settings")
 async def update_settings(data: SettingsUpdate):
-    with get_db() as conn:
+    with db_conn() as conn:
         for key, value in data.settings.items():
             conn.execute("""
                 INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)
