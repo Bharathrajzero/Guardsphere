@@ -1521,18 +1521,25 @@ let isDark = true;
 function applyTheme(dark) {
   isDark = dark;
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  document.getElementById('icon-moon').style.display = dark ? '' : 'none';
-  document.getElementById('icon-sun').style.display  = dark ? 'none' : '';
+  const moonEl = document.getElementById('icon-moon');
+  const sunEl  = document.getElementById('icon-sun');
+  if (moonEl) moonEl.style.display = dark ? '' : 'none';
+  if (sunEl)  sunEl.style.display  = dark ? 'none' : '';
   localStorage.setItem('gs_theme', dark ? 'dark' : 'light');
-  redrawChart();
+  // Only redraw chart if canvas is visible and has dimensions
+  const canvas = document.getElementById('chartCanvas');
+  if (canvas && canvas.getBoundingClientRect().width > 0) redrawChart();
 }
 
 function toggleTheme() { applyTheme(!isDark); }
 
-// Restore saved theme
+// Restore saved theme — applied after DOM ready so icons exist and initDashboard is not blocked
 (function(){
   const saved = localStorage.getItem('gs_theme');
-  if (saved === 'light') applyTheme(false);
+  if (saved === 'light') {
+    isDark = false;
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
 })();
 
 function updateCounter() {
@@ -1682,13 +1689,13 @@ async function fetchMetrics() {
       fetch('/api/chart')
     ]);
     
-    if (!metaRes.ok) {
-      throw new Error(`Telemetry API error: ${metaRes.status}`);
+    if (!metaRes.ok || !evtRes.ok || !chartRes.ok) {
+      throw new Error(`API error: telemetry=${metaRes.status}, events=${evtRes.status}, chart=${chartRes.status}`);
     }
-
+    
     const meta  = await metaRes.json();
-    const evts  = evtRes.ok  ? await evtRes.json()  : [];
-    const chart = chartRes.ok ? await chartRes.json() : [];
+    const evts  = await evtRes.json();
+    const chart = await chartRes.json();
 
     console.log('✓ Metrics loaded:', meta);
     console.log('✓ Events loaded:', evts.length, 'events');
@@ -1784,19 +1791,19 @@ function drawChart(rawData) {
   chartData = rawData;
   console.log('Drawing chart with data:', rawData);
   redrawChart();
+  // Retry after paint in case canvas had no dimensions yet (e.g. light theme load)
+  setTimeout(redrawChart, 150);
 }
 
 function redrawChart() {
   const canvas = document.getElementById('chartCanvas');
-  if (!canvas) {
-    console.error('Chart canvas not found!');
-    return;
-  }
-  
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;  // canvas not visible yet, skip
+
   console.log('Redrawing chart...');
   const ctx    = canvas.getContext('2d');
   const dpr    = window.devicePixelRatio || 1;
-  const rect   = canvas.getBoundingClientRect();
   canvas.width  = rect.width  * dpr;
   canvas.height = rect.height * dpr;
   ctx.scale(dpr, dpr);
@@ -2033,6 +2040,12 @@ async function initDashboard() {
     console.log('Retrying in 500ms...');
     setTimeout(initDashboard, 500);
     return;
+  }
+
+  // Now that DOM is ready, finish applying saved theme (icons etc.)
+  const savedTheme = localStorage.getItem('gs_theme');
+  if (savedTheme === 'light') {
+    applyTheme(false);
   }
   
   console.log('All DOM elements found, fetching data...');
